@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat Project</title>
+</head>
+<body>
+    {% if user.is_authenticated %}
+        <h1>سلام {{ user.username }}! خوش آمدی.</h1>
+        <p>شما با موفقیت وارد شدید.</p>
+        <a href="{% url 'account_logout' %}">خروج از حساب کاربری</a>
+    {% else %}
+        <h1>به پروژه چت خوش آمدید.</h1>
+        <p>لطفاً برای ادامه وارد شوید.</p>
+        <a href="{% url 'account_login' %}">ورود</a>
+        <a href="{% url 'account_signup' %}">ثبت‌نام</a>
+    {% endif %}
+</body>
+</html>
