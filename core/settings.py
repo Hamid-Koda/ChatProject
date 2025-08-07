@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'chat.apps.ChatConfig',
     'django.contrib.sites',
     'allauth',
@@ -158,3 +159,5 @@ SOCIALACCOUNT_PROVIDERS = {
         }
     }
 }
+
+ASGI_APPLICATION = 'core.asgi.application'

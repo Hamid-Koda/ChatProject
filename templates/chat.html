@@ -6,12 +6,13 @@
     <style>
         body { font-family: sans-serif; display: flex; justify-content: center; background-color: #f4f4f4; }
         #chat-container { width: 500px; border: 1px solid #ccc; background-color: white; display: flex; flex-direction: column; height: 80vh; margin-top: 5vh; }
-        #chat-log { flex-grow: 1; padding: 10px; overflow-y: auto; border-bottom: 1px solid #ccc; }
-        .message { margin-bottom: 10px; padding: 8px; border-radius: 5px; max-width: 70%; }
+        #chat-log { flex-grow: 1; padding: 10px; overflow-y: auto; border-bottom: 1px solid #ccc; display: flex; flex-direction: column;}
+        .message { margin-bottom: 10px; padding: 8px; border-radius: 5px; max-width: 70%; word-wrap: break-word; }
         .user-message { background-color: #dcf8c6; align-self: flex-end; }
         .bot-message { background-color: #f1f0f0; align-self: flex-start; }
-        #chat-form { display: flex; padding: 10px; }
+        #chat-form { display: flex; padding: 10px; border-top: 1px solid #eee; }
         #chat-message-input { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
+        #chat-mode-selector { margin-right: 10px; padding: 8px; }
         #chat-message-submit { padding: 8px 15px; margin-right: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
@@ -21,6 +22,10 @@
     <div id="chat-log">
         </div>
     <div id="chat-form">
+        <select id="chat-mode-selector">
+            <option value="http">HTTP عادی</option>
+            <option value="http_stream">HTTP استریم</option>
+        </select>
         <input type="text" id="chat-message-input" placeholder="پیام خود را بنویسید...">
         <button id="chat-message-submit">ارسال</button>
     </div>
@@ -30,8 +35,8 @@
     const chatLog = document.getElementById('chat-log');
     const messageInput = document.getElementById('chat-message-input');
     const sendButton = document.getElementById('chat-message-submit');
+    const modeSelector = document.getElementById('chat-mode-selector');
 
-    // تابع برای گرفتن CSRF token از کوکی‌ها
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -48,24 +53,58 @@
     }
     const csrftoken = getCookie('csrftoken');
 
-    function addMessageToLog(message, isUser) {
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message');
-        messageElement.classList.add(isUser ? 'user-message' : 'bot-message');
+    function addMessageToLog(message, isUser, element = null) {
+        let messageElement = element;
+        if (!messageElement) {
+            messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.classList.add(isUser ? 'user-message' : 'bot-message');
+            chatLog.appendChild(messageElement);
+        }
         messageElement.innerText = message;
-        chatLog.appendChild(messageElement);
-        chatLog.scrollTop = chatLog.scrollHeight; // اسکرول به پایین
+        chatLog.scrollTop = chatLog.scrollHeight;
+        return messageElement;
+    }
+
+    async function handleStreamedResponse(response) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let botMessageElement = null;
+        let fullReply = '';
+
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            fullReply += chunk;
+            if (!botMessageElement) {
+                botMessageElement = addMessageToLog('', false);
+            }
+            botMessageElement.innerText = fullReply;
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
     }
 
     sendButton.addEventListener('click', function() {
         const messageText = messageInput.value.trim();
         if (messageText === '') return;
 
-        addMessageToLog(messageText, true); // نمایش پیام کاربر در صفحه
-        messageInput.value = ''; // خالی کردن اینپوت
+        addMessageToLog(messageText, true);
+        messageInput.value = '';
 
-        // ارسال پیام به API بک‌اند
-        fetch('/api/chat/', {
+        const chatMode = modeSelector.value;
+        let apiUrl = '';
+        let handleResponse;
+
+        if (chatMode === 'http') {
+            apiUrl = '/api/chat/';
+            handleResponse = (response) => response.json().then(data => addMessageToLog(data.reply, false));
+        } else { // http_stream
+            apiUrl = '/api/chat/stream/';
+            handleResponse = handleStreamedResponse;
+        }
+
+        fetch(apiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -73,18 +112,13 @@
             },
             body: JSON.stringify({ 'message': messageText })
         })
-        .then(response => response.json())
-        .then(data => {
-            // نمایش پاسخ ربات در صفحه
-            addMessageToLog(data.reply, false);
-        })
+        .then(handleResponse)
         .catch(error => {
             console.error('Error:', error);
             addMessageToLog('خطا در ارتباط با سرور', false);
         });
     });
 
-    // اجازه ارسال با دکمه Enter
     messageInput.addEventListener('keyup', function(event) {
         if (event.key === 'Enter') {
             sendButton.click();
