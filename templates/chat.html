@@ -19,12 +19,12 @@
 <body>
 
 <div id="chat-container">
-    <div id="chat-log">
-        </div>
+    <div id="chat-log"></div>
     <div id="chat-form">
         <select id="chat-mode-selector">
             <option value="http">HTTP عادی</option>
             <option value="http_stream">HTTP استریم</option>
+            <option value="websocket">WebSocket</option>
         </select>
         <input type="text" id="chat-message-input" placeholder="پیام خود را بنویسید...">
         <button id="chat-message-submit">ارسال</button>
@@ -36,6 +36,8 @@
     const messageInput = document.getElementById('chat-message-input');
     const sendButton = document.getElementById('chat-message-submit');
     const modeSelector = document.getElementById('chat-mode-selector');
+
+    let chatSocket = null; 
 
     function getCookie(name) {
         let cookieValue = null;
@@ -85,6 +87,24 @@
         }
     }
 
+    function connectWebSocket() {
+        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+            return;
+        }
+
+        chatSocket = new WebSocket('ws://' + window.location.host + '/ws/chat/');
+
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            addMessageToLog(data.reply, false);
+        };
+
+        chatSocket.onclose = function(e) {
+            console.error('Chat socket closed unexpectedly');
+            addMessageToLog('ارتباط با سرور قطع شد. لطفاً صفحه را رفرش کنید.', false);
+        };
+    }
+
     sendButton.addEventListener('click', function() {
         const messageText = messageInput.value.trim();
         if (messageText === '') return;
@@ -93,37 +113,34 @@
         messageInput.value = '';
 
         const chatMode = modeSelector.value;
-        let apiUrl = '';
-        let handleResponse;
+        if (chatMode === 'websocket') {
+            connectWebSocket(); 
+            setTimeout(() => {
+                chatSocket.send(JSON.stringify({ 'message': messageText }));
+            }, 500);
+        } else {
+            let apiUrl = (chatMode === 'http') ? '/api/chat/' : '/api/chat/stream/';
+            let handleResponse = (chatMode === 'http') ?
+                (response) => response.json().then(data => addMessageToLog(data.reply, false)) :
+                handleStreamedResponse;
 
-        if (chatMode === 'http') {
-            apiUrl = '/api/chat/';
-            handleResponse = (response) => response.json().then(data => addMessageToLog(data.reply, false));
-        } else { // http_stream
-            apiUrl = '/api/chat/stream/';
-            handleResponse = handleStreamedResponse;
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+                body: JSON.stringify({ 'message': messageText })
+            })
+            .then(handleResponse)
+            .catch(error => {
+                console.error('Error:', error);
+                addMessageToLog('خطا در ارتباط با سرور', false);
+            });
         }
-
-        fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken
-            },
-            body: JSON.stringify({ 'message': messageText })
-        })
-        .then(handleResponse)
-        .catch(error => {
-            console.error('Error:', error);
-            addMessageToLog('خطا در ارتباط با سرور', false);
-        });
     });
 
     messageInput.addEventListener('keyup', function(event) {
-        if (event.key === 'Enter') {
-            sendButton.click();
-        }
+        if (event.key === 'Enter') { sendButton.click(); }
     });
+
 </script>
 
 </body>
