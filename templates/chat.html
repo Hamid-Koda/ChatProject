@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>صفحه چت</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; background-color: #f4f4f4; }
+        #chat-container { width: 500px; border: 1px solid #ccc; background-color: white; display: flex; flex-direction: column; height: 80vh; margin-top: 5vh; }
+        #chat-log { flex-grow: 1; padding: 10px; overflow-y: auto; border-bottom: 1px solid #ccc; }
+        .message { margin-bottom: 10px; padding: 8px; border-radius: 5px; max-width: 70%; }
+        .user-message { background-color: #dcf8c6; align-self: flex-end; }
+        .bot-message { background-color: #f1f0f0; align-self: flex-start; }
+        #chat-form { display: flex; padding: 10px; }
+        #chat-message-input { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
+        #chat-message-submit { padding: 8px 15px; margin-right: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div id="chat-container">
+    <div id="chat-log">
+        </div>
+    <div id="chat-form">
+        <input type="text" id="chat-message-input" placeholder="پیام خود را بنویسید...">
+        <button id="chat-message-submit">ارسال</button>
+    </div>
+</div>
+
+<script>
+    const chatLog = document.getElementById('chat-log');
+    const messageInput = document.getElementById('chat-message-input');
+    const sendButton = document.getElementById('chat-message-submit');
+
+    // تابع برای گرفتن CSRF token از کوکی‌ها
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    function addMessageToLog(message, isUser) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message');
+        messageElement.classList.add(isUser ? 'user-message' : 'bot-message');
+        messageElement.innerText = message;
+        chatLog.appendChild(messageElement);
+        chatLog.scrollTop = chatLog.scrollHeight; // اسکرول به پایین
+    }
+
+    sendButton.addEventListener('click', function() {
+        const messageText = messageInput.value.trim();
+        if (messageText === '') return;
+
+        addMessageToLog(messageText, true); // نمایش پیام کاربر در صفحه
+        messageInput.value = ''; // خالی کردن اینپوت
+
+        // ارسال پیام به API بک‌اند
+        fetch('/api/chat/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ 'message': messageText })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // نمایش پاسخ ربات در صفحه
+            addMessageToLog(data.reply, false);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            addMessageToLog('خطا در ارتباط با سرور', false);
+        });
+    });
+
+    // اجازه ارسال با دکمه Enter
+    messageInput.addEventListener('keyup', function(event) {
+        if (event.key === 'Enter') {
+            sendButton.click();
+        }
+    });
+</script>
+
+</body>
+</html>
