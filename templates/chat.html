@@ -25,6 +25,7 @@
             <option value="http">HTTP عادی</option>
             <option value="http_stream">HTTP استریم</option>
             <option value="websocket">WebSocket</option>
+            <option value="websocket_stream">WebSocket استریم</option>
         </select>
         <input type="text" id="chat-message-input" placeholder="پیام خود را بنویسید...">
         <button id="chat-message-submit">ارسال</button>
@@ -37,7 +38,8 @@
     const sendButton = document.getElementById('chat-message-submit');
     const modeSelector = document.getElementById('chat-mode-selector');
 
-    let chatSocket = null; 
+    let httpSocket = null;
+    let streamSocket = null;
 
     function getCookie(name) {
         let cookieValue = null;
@@ -72,37 +74,30 @@
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let botMessageElement = null;
-        let fullReply = '';
 
         while (true) {
             const { value, done } = await reader.read();
             if (done) break;
             const chunk = decoder.decode(value, { stream: true });
-            fullReply += chunk;
             if (!botMessageElement) {
                 botMessageElement = addMessageToLog('', false);
             }
-            botMessageElement.innerText = fullReply;
+            botMessageElement.innerText += chunk;
             chatLog.scrollTop = chatLog.scrollHeight;
         }
     }
 
-    function connectWebSocket() {
-        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
-            return;
+    function connectSocket(url, onMessageCallback, socketVar) {
+        if (socketVar && socketVar.readyState === WebSocket.OPEN) {
+            return socketVar;
         }
-
-        chatSocket = new WebSocket('ws://' + window.location.host + '/ws/chat/');
-
-        chatSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            addMessageToLog(data.reply, false);
-        };
-
-        chatSocket.onclose = function(e) {
-            console.error('Chat socket closed unexpectedly');
+        const newSocket = new WebSocket(url);
+        newSocket.onmessage = onMessageCallback;
+        newSocket.onclose = function(e) {
+            console.error('Socket closed unexpectedly');
             addMessageToLog('ارتباط با سرور قطع شد. لطفاً صفحه را رفرش کنید.', false);
         };
+        return newSocket;
     }
 
     sendButton.addEventListener('click', function() {
@@ -113,12 +108,39 @@
         messageInput.value = '';
 
         const chatMode = modeSelector.value;
-        if (chatMode === 'websocket') {
-            connectWebSocket(); 
+        
+        if (chatMode.startsWith('websocket')) {
+            let socket, url, onMessage;
+            if (chatMode === 'websocket') {
+                url = 'ws://' + window.location.host + '/ws/chat/';
+                onMessage = function(e) {
+                    const data = JSON.parse(e.data);
+                    addMessageToLog(data.reply, false);
+                };
+                httpSocket = connectSocket(url, onMessage, httpSocket);
+                socket = httpSocket;
+            } else { // websocket_stream
+                url = 'ws://' + window.location.host + '/ws/chat/stream/';
+                let botMessageElement = null;
+                onMessage = function(e) {
+                    const data = JSON.parse(e.data);
+                    if (!botMessageElement) {
+                        botMessageElement = addMessageToLog('', false);
+                    }
+                    botMessageElement.innerText += data.chunk;
+                };
+                streamSocket = connectSocket(url, onMessage, streamSocket);
+                socket = streamSocket;
+            }
             setTimeout(() => {
-                chatSocket.send(JSON.stringify({ 'message': messageText }));
-            }, 500);
-        } else {
+                if (socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify({ 'message': messageText }));
+                } else {
+                    console.log("WebSocket is not open yet.");
+                }
+            }, 300);
+
+        } else { // HTTP Modes
             let apiUrl = (chatMode === 'http') ? '/api/chat/' : '/api/chat/stream/';
             let handleResponse = (chatMode === 'http') ?
                 (response) => response.json().then(data => addMessageToLog(data.reply, false)) :
@@ -130,17 +152,13 @@
                 body: JSON.stringify({ 'message': messageText })
             })
             .then(handleResponse)
-            .catch(error => {
-                console.error('Error:', error);
-                addMessageToLog('خطا در ارتباط با سرور', false);
-            });
+            .catch(error => { console.error('Error:', error); addMessageToLog('خطا در ارتباط با سرور', false); });
         }
     });
 
     messageInput.addEventListener('keyup', function(event) {
         if (event.key === 'Enter') { sendButton.click(); }
     });
-
 </script>
 
 </body>
