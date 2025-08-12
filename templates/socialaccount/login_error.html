@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+    <h2>{% trans "Social Network Login Failure" %}</h2>
+
+    <p style="line-height: 1.6; margin-bottom: 2em;">
+        {% trans "An error occurred while attempting to login via your social network account." %}
+    </p>
+
+    <div class="links">
+        <a href="{% url 'account_login' %}" class="button button-secondary">{% trans "Return to Login Page" %}</a>
+    </div>
+{% endblock %}

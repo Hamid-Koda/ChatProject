@@ -41,7 +41,9 @@ def get_rule_based_response(user_message):
     elif "بک اندت چیه" in user_message or "بک‌اند" in user_message:
         return "بک‌اند من با قدرت فریمورک جنگو (Django) و زبان پایتون نوشته شده."
     elif "فرانتت چیه" in user_message or "فرانت‌اند" in user_message:
-        return "فرانت‌اند من با HTML و CSS ساده و کمی جاوا اسکریپت برای پویایی ساخته شده."    
+        return "فرانت‌اند من با HTML و CSS ساده و کمی جاوا اسکریپت برای پویایی ساخته شده." 
+    elif "خدا" in user_message or "فعلا" in user_message:
+        return "خدانگهدار، روز خوبی رو داشته باشی عزیزم!"   
     else:
         return "متاسفانه متوجه منظورتان نشدم. می‌توانید سوال دیگری بپرسید؟"
     

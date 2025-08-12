@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+    <h2>{% trans "Confirm Sign In" %}</h2>
+
+    <p style="line-height: 1.6; margin-bottom: 2em;">
+        {% blocktrans with provider_name=account.get_provider.name site_name=site.name %}
+        شما در حال ورود با اکانت {{ provider_name }} خود هستید.
+        {% endblocktrans %}
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="button button-primary">{% trans "Continue" %}</button>
+    </form>
+{% endblock %}
