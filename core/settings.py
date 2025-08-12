@@ -165,3 +165,5 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 ASGI_APPLICATION = 'core.asgi.application'
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

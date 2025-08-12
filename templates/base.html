@@ -38,7 +38,7 @@
             padding: 2.5em;
             background: var(--white-color);
             border-radius: 8px;
-            box-shadow: 0 4px S12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             text-align: center;
         }
 
@@ -64,7 +64,7 @@
             display: inline-block;
             width: 100%;
             padding: 12px;
-            color: var(--white-color);
+            color: var(--white-color); /* رنگ متن پیش‌فرض برای دکمه‌ها */
             border: none;
             border-radius: 6px;
             font-size: 1.1em;
@@ -84,6 +84,10 @@
         .links { margin-top: 1.5em; }
         .links a { color: var(--primary-color); text-decoration: none; }
 
+        a.button {
+            color: var(--white-color) !important;
+        }
+        
         .socialaccount_provider {
             display: block;
             padding: 12px;
@@ -93,14 +97,32 @@
             margin-bottom: 1em;
             border: 1px solid var(--border-color);
             color: var(--text-color);
+            transition: background-color 0.2s, border-color 0.2s;
         }
+        
         .socialaccount_provider.google {
-            background-color: #ffffff;
-            color: rgb(40, 44, 237);
-            border-color: #4285F4;
+            background-color: #d2055a;
+            color: white;
+            border-color: #db0594;
+        }
+
+        .socialaccount_provider.google:hover {
+            background-color: #b4054e;
+            border-color: #b4054e;
         }
 
         .divider { margin: 1.5em 0; color: #aaa; }
+
+        .errorlist {
+            list-style-type: none;
+            padding: 0;
+            margin: 0 0 1em 0;
+            color: var(--danger-color);
+            font-weight: 500;
+            font-size: 0.9em;
+            text-align: right;
+        }
+
     </style>
 </head>
 <body>
