@@ -1,19 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Chat Project</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
     {% if user.is_authenticated %}
-        <h1>سلام {{ user.username }}! خوش آمدی.</h1>
-        <p>شما با موفقیت وارد شدید.</p>
-        <a href="{% url 'account_logout' %}">خروج از حساب کاربری</a>
+        <h2 style="text-align: center;">سلام {{ user.username }}!</h2>
+        <p style="text-align: center; margin-bottom: 2em;">شما با موفقیت وارد شدید. می‌توانید به صفحه چت بروید.</p>
+        
+        <div class="links">
+            <a href="{% url 'chat_page' %}" style="display: block; background: #28a745; color: white; padding: 12px; border-radius: 6px; margin-bottom: 1em; text-decoration: none;">رفتن به صفحه چت</a>
+            <a href="{% url 'account_logout' %}">{% trans "Sign Out" %}</a>
+        </div>
+
     {% else %}
-        <h1>به پروژه چت خوش آمدید.</h1>
-        <p>لطفاً برای ادامه وارد شوید.</p>
-        <a href="{% url 'account_login' %}">ورود</a>
-        <a href="{% url 'account_signup' %}">ثبت‌نام</a>
+        <h2 style="text-align: center;">به پروژه چت خوش آمدید</h2>
+        <p style="text-align: center; margin-bottom: 2em;">لطفاً برای ادامه وارد شوید یا ثبت‌نام کنید.</p>
+        
+        <div class="links">
+             <a href="{% url 'account_login' %}" style="display: block; background: var(--primary-color); color: white; padding: 12px; border-radius: 6px; margin-bottom: 1em; text-decoration: none;">{% trans "Sign In" %}</a>
+             <a href="{% url 'account_signup' %}">{% trans "Sign Up" %}</a>
+        </div>
     {% endif %}
-</body>
-</html>
+{% endblock %}

@@ -1,17 +1,112 @@
 <!DOCTYPE html>
-<html>
+<html lang="fa" dir="rtl">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>پروژه چت</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        .error { background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; }
+        :root {
+            --primary-color: #007bff;
+            --primary-hover-color: #0056b3;
+            --light-gray-color: #f0f2f5;
+            --white-color: #ffffff;
+            --text-color: #333;
+            --border-color: #ddd;
+            --danger-color: #dc3545;
+            --danger-hover-color: #c82333;
+            --secondary-color: #6c757d;
+            --secondary-hover-color: #5a6268;
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: var(--light-gray-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+            padding: 2.5em;
+            background: var(--white-color);
+            border-radius: 8px;
+            box-shadow: 0 4px S12px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 1.5em;
+        }
+
+        form p { margin-bottom: 1.2em; text-align: right; }
+        form label { display: block; margin-bottom: 0.5em; font-weight: 500; }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .button {
+            display: inline-block;
+            width: 100%;
+            padding: 12px;
+            color: var(--white-color);
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            transition: background-color 0.2s;
+        }
+        .button-primary { background-color: var(--primary-color); }
+        .button-primary:hover { background-color: var(--primary-hover-color); }
+        .button-danger { background-color: var(--danger-color); }
+        .button-danger:hover { background-color: var(--danger-hover-color); }
+        .button-secondary { background-color: var(--secondary-color); }
+        .button-secondary:hover { background-color: var(--secondary-hover-color); }
+        
+        .links { margin-top: 1.5em; }
+        .links a { color: var(--primary-color); text-decoration: none; }
+
+        .socialaccount_provider {
+            display: block;
+            padding: 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 1em;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+        .socialaccount_provider.google {
+            background-color: #ffffff;
+            color: rgb(40, 44, 237);
+            border-color: #4285F4;
+        }
+
+        .divider { margin: 1.5em 0; color: #aaa; }
     </style>
 </head>
 <body>
-    {% for message in messages %}
-        <div class="error">{{ message }}</div>
-    {% endfor %}
-
-    {% block content %}
-    {% endblock %}
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
 </body>
 </html>

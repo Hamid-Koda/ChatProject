@@ -3,19 +3,18 @@
 
 {% block content %}
     <h2>{% trans "Sign Up" %}</h2>
-
-    <p>{% blocktrans %}Already have an account? Then please <a href="{{ login_url }}">sign in</a>.{% endblocktrans %}</p>
-
-    {% include "socialaccount/snippets/provider_list.html" with process="signup" %}
     
-    <div style="margin-top: 1.5em; margin-bottom: 1em; text-align: center;">
-        {% trans 'or' %}
-    </div>
+    {% include "socialaccount/snippets/provider_list.html" with process="signup" %}
+
+    <div class="divider">{% trans 'or' %}</div>
 
     <form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">{% trans "Sign Up" %}</button>
+        <button type="submit" class="button button-primary">{% trans "Sign Up" %}</button>
     </form>
-
+    
+    <div class="links">
+        <a href="{% url 'account_login' %}">{% trans "Already have an account? Sign In" %}</a>
+    </div>
 {% endblock %}
