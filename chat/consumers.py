@@ -3,6 +3,7 @@ import time
 from channels.generic.websocket import WebsocketConsumer
 from asgiref.sync import async_to_sync
 from .models import Conversation, Message
+from .views import get_rule_based_response
 
 class ChatConsumer(WebsocketConsumer):
     def connect(self):
@@ -24,7 +25,7 @@ class ChatConsumer(WebsocketConsumer):
             conversation=conversation, text=user_message_text, is_from_user=True
         )
 
-        bot_response_text = f"پاسخ وب‌سوکت: '{user_message_text}' دریافت شد."
+        bot_response_text = get_rule_based_response(user_message_text)
         Message.objects.create(
             conversation=conversation, text=bot_response_text, is_from_user=False
         )
@@ -53,7 +54,7 @@ class StreamChatConsumer(WebsocketConsumer):
             conversation=conversation, text=user_message_text, is_from_user=True
         )
 
-        bot_response_text = f"پاسخ استریم شده وب‌سوکت: '{user_message_text}' دریافت شد."
+        bot_response_text = get_rule_based_response(user_message_text)
         
         for word in bot_response_text.split():
             self.send(text_data=json.dumps({'chunk': word + '\u00A0'}))

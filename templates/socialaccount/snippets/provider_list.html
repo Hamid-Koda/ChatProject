@@ -1,0 +1,29 @@
+{% load socialaccount %}
+{% load i18n %}
+
+{% get_providers as socialaccount_providers %}
+
+{% if socialaccount_providers %}
+<div class="socialaccount_ballot">
+
+  <p style="font-weight: bold; margin-bottom: 0.5em;">
+    {% if process == "login" %}
+        {% trans "Or sign in with:" %}
+    {% else %}
+        {% trans "Or sign up with:" %}
+    {% endif %}
+  </p>
+
+  <ul class="socialaccount_providers" style="list-style-type: none; padding: 0;">
+    {% for provider in socialaccount_providers %}
+        <li style="margin-bottom: 5px;">
+            <a title="{{provider.name}}" class="socialaccount_provider {{provider.id}}" 
+               href="{% provider_login_url provider.id process=process scope=scope auth_params=auth_params %}">
+                {{provider.name}}
+            </a>
+        </li>
+    {% endfor %}
+  </ul>
+
+</div>
+{% endif %}
