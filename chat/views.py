@@ -6,9 +6,8 @@ from django.http import StreamingHttpResponse
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-
 from .models import Conversation, Message
+from rest_framework.permissions import IsAuthenticated
 
 def get_rule_based_response(user_message):
     user_message = user_message.lower().strip()
@@ -57,29 +56,29 @@ def chat_page(request):
 
 class ChatAPIView(APIView):
     """API for handling a standard, non-streaming chat request."""
-    permission_classes = [IsAuthenticated] 
+    #permission_classes = [IsAuthenticated] # این خط برای تست با پست‌من غیرفعال است
 
     def post(self, request, *args, **kwargs):
         user_message_text = request.data.get('message')
         if not user_message_text:
             return Response({'error': 'Message not provided'}, status=400)
 
-        conversation, created = Conversation.objects.get_or_create(user=request.user)
-
-        Message.objects.create(
-            conversation=conversation,
-            text=user_message_text,
-            is_from_user=True
-        )
-
         bot_response_text = get_rule_based_response(user_message_text)
-        # ---------------------------
 
-        Message.objects.create(
-            conversation=conversation,
-            text=bot_response_text,
-            is_from_user=False
-        )
+        # --- تغییر اصلی اینجاست ---
+        # فقط اگر کاربر لاگین کرده باشد، گفتگو را ذخیره می‌کنیم
+        if request.user.is_authenticated:
+            conversation, created = Conversation.objects.get_or_create(user=request.user)
+            Message.objects.create(
+                conversation=conversation,
+                text=user_message_text,
+                is_from_user=True
+            )
+            Message.objects.create(
+                conversation=conversation,
+                text=bot_response_text,
+                is_from_user=False
+            )
 
         return Response({'reply': bot_response_text})
 
@@ -92,18 +91,21 @@ def stream_response_generator(user_message_text):
 
 class ChatStreamAPIView(APIView):
     """API for handling a streaming chat request."""
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated] # این خط برای تست با پست‌من غیرفعال است
 
     def post(self, request, *args, **kwargs):
         user_message_text = request.data.get('message')
         if not user_message_text:
             return Response({'error': 'Message not provided'}, status=400)
 
-        conversation, created = Conversation.objects.get_or_create(user=request.user)
-        Message.objects.create(
-            conversation=conversation,
-            text=user_message_text,
-            is_from_user=True
-        )
-
+        # --- تغییر اصلی اینجاست ---
+        # فقط اگر کاربر لاگین کرده باشد، پیام او را ذخیره می‌کنیم
+        if request.user.is_authenticated:
+            conversation, created = Conversation.objects.get_or_create(user=request.user)
+            Message.objects.create(
+                conversation=conversation,
+                text=user_message_text,
+                is_from_user=True
+            )
+        
         return StreamingHttpResponse(stream_response_generator(user_message_text))

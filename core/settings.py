@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'django.contrib.admin',
     'django.contrib.auth',
+    'drf_spectacular',
     'rest_framework',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -167,3 +168,13 @@ SOCIALACCOUNT_PROVIDERS = {
 ASGI_APPLICATION = 'core.asgi.application'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Chat Project API',
+    'DESCRIPTION': 'Complete and interactive documentation for all Chat Project APIs',
+    'VERSION': '1.0.0',
+}
