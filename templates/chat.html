@@ -60,7 +60,6 @@
             color: white;
             border-color: var(--secondary-color);
         }
-        /* ------------------------------------------- */
 
         #chat-log {
             flex-grow: 1;
@@ -80,13 +79,13 @@
         .user-message {
             background-color: #0084ff;
             color: white;
-            align-self: flex-start;
+            align-self: flex-start; 
             border-bottom-right-radius: 4px;
         }
         .bot-message {
             background-color: #e4e6eb;
             color: #050505;
-            align-self: flex-end;
+            align-self: flex-end; 
             border-bottom-left-radius: 4px;
         }
         #chat-form {
@@ -158,7 +157,7 @@
     const sendButton = document.getElementById('chat-message-submit');
     const modeSelector = document.getElementById('chat-mode-selector');
 
-    let httpSocket = null;
+    let normalSocket = null;
     let streamSocket = null;
 
     function getCookie(name) {
@@ -177,15 +176,12 @@
     }
     const csrftoken = getCookie('csrftoken');
 
-    function addMessageToLog(message, isUser, element = null) {
-        let messageElement = element;
-        if (!messageElement) {
-            messageElement = document.createElement('div');
-            messageElement.classList.add('message');
-            messageElement.classList.add(isUser ? 'user-message' : 'bot-message');
-            chatLog.appendChild(messageElement);
-        }
+    function addMessageToLog(message, isUser) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message');
+        messageElement.classList.add(isUser ? 'user-message' : 'bot-message');
         messageElement.innerText = message;
+        chatLog.appendChild(messageElement);
         chatLog.scrollTop = chatLog.scrollHeight;
         return messageElement;
     }
@@ -193,15 +189,12 @@
     async function handleStreamedResponse(response) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        let botMessageElement = null;
+        let botMessageElement = addMessageToLog('', false);
 
         while (true) {
             const { value, done } = await reader.read();
             if (done) break;
             const chunk = decoder.decode(value, { stream: true });
-            if (!botMessageElement) {
-                botMessageElement = addMessageToLog('', false);
-            }
             botMessageElement.innerText += chunk;
             chatLog.scrollTop = chatLog.scrollHeight;
         }
@@ -209,13 +202,14 @@
 
     function connectSocket(url, onMessageCallback, socketVar) {
         if (socketVar && socketVar.readyState === WebSocket.OPEN) {
+            socketVar.onmessage = onMessageCallback;
             return socketVar;
         }
         const newSocket = new WebSocket(url);
         newSocket.onmessage = onMessageCallback;
         newSocket.onclose = function(e) {
             console.error('Socket closed unexpectedly');
-            addMessageToLog('ارتباط با سرور قطع شد. لطفاً صفحه را رفرش کنید.', false);
+            addMessageToLog('ارتباط با سرور قطع شد.', false);
         };
         return newSocket;
     }
@@ -237,8 +231,8 @@
                     const data = JSON.parse(e.data);
                     addMessageToLog(data.reply, false);
                 };
-                httpSocket = connectSocket(url, onMessage, httpSocket);
-                socket = httpSocket;
+                normalSocket = connectSocket(url, onMessage, normalSocket);
+                socket = normalSocket;
             } else { // websocket_stream
                 url = 'ws://' + window.location.host + '/ws/chat/stream/';
                 let botMessageElement = null;
@@ -255,8 +249,6 @@
             setTimeout(() => {
                 if (socket.readyState === WebSocket.OPEN) {
                     socket.send(JSON.stringify({ 'message': messageText }));
-                } else {
-                    console.log("WebSocket is not open yet.");
                 }
             }, 300);
 
@@ -281,9 +273,5 @@
     });
 </script>
 
-
 </body>
 </html>
-
-
-

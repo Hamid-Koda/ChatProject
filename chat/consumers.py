@@ -65,3 +65,7 @@ class StreamChatConsumer(WebsocketConsumer):
         for word in bot_response_text.split():
             self.send(text_data=json.dumps({'chunk': word + '\u00A0'}, ensure_ascii=False))
             time.sleep(0.1)
+
+#connect to web socket in postman
+
+#connect to swagger : http://127.0.0.1:8000/api/schema/swagger-ui/
