@@ -6,8 +6,11 @@ from django.http import StreamingHttpResponse
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Conversation, Message
 from rest_framework.permissions import IsAuthenticated
+
+from drf_spectacular.utils import extend_schema
+
+from .models import Conversation, Message
 
 def get_rule_based_response(user_message):
     user_message = user_message.lower().strip()
@@ -45,7 +48,7 @@ def get_rule_based_response(user_message):
         return "خدانگهدار، روز خوبی رو داشته باشی عزیزم!"   
     else:
         return "متاسفانه متوجه منظورتان نشدم. می‌توانید سوال دیگری بپرسید؟"
-    
+
 def home(request):
     return render(request, 'home.html')
 
@@ -54,34 +57,31 @@ def chat_page(request):
     """Renders the page where the chat interface is displayed."""
     return render(request, 'chat.html')
 
+@extend_schema(
+    request={
+        'application/json': {
+            'type': 'object',
+            'properties': {
+                'message': {'type': 'string', 'example': 'سلام، خوبی؟'}
+            }
+        }
+    },
+    responses={200: {'description': 'پاسخ موفقیت‌آمیز ربات'}}
+)
 class ChatAPIView(APIView):
     """API for handling a standard, non-streaming chat request."""
-    #permission_classes = [IsAuthenticated] # این خط برای تست با پست‌من غیرفعال است
+    # permission_classes = [IsAuthenticated] # برای تست غیرفعال است
 
     def post(self, request, *args, **kwargs):
         user_message_text = request.data.get('message')
         if not user_message_text:
             return Response({'error': 'Message not provided'}, status=400)
-
         bot_response_text = get_rule_based_response(user_message_text)
-
-        # --- تغییر اصلی اینجاست ---
-        # فقط اگر کاربر لاگین کرده باشد، گفتگو را ذخیره می‌کنیم
         if request.user.is_authenticated:
             conversation, created = Conversation.objects.get_or_create(user=request.user)
-            Message.objects.create(
-                conversation=conversation,
-                text=user_message_text,
-                is_from_user=True
-            )
-            Message.objects.create(
-                conversation=conversation,
-                text=bot_response_text,
-                is_from_user=False
-            )
-
+            Message.objects.create(conversation=conversation, text=user_message_text, is_from_user=True)
+            Message.objects.create(conversation=conversation, text=bot_response_text, is_from_user=False)
         return Response({'reply': bot_response_text})
-
 
 def stream_response_generator(user_message_text):
     bot_response = get_rule_based_response(user_message_text)
@@ -89,23 +89,28 @@ def stream_response_generator(user_message_text):
         yield word + " "
         time.sleep(0.1) 
 
+@extend_schema(
+    request={
+        'application/json': {
+            'type': 'object',
+            'properties': {
+                'message': {'type': 'string', 'example': 'یک سوال استریم شده'}
+            }
+        }
+    },
+    responses={200: {'description': 'پاسخ استریم شده از ربات'}}
+)
 class ChatStreamAPIView(APIView):
     """API for handling a streaming chat request."""
-    #permission_classes = [IsAuthenticated] # این خط برای تست با پست‌من غیرفعال است
+    # permission_classes = [IsAuthenticated] # برای تست غیرفعال است
 
     def post(self, request, *args, **kwargs):
+        # ... (کد داخل این متد بدون تغییر باقی می‌ماند) ...
         user_message_text = request.data.get('message')
         if not user_message_text:
             return Response({'error': 'Message not provided'}, status=400)
-
-        # --- تغییر اصلی اینجاست ---
-        # فقط اگر کاربر لاگین کرده باشد، پیام او را ذخیره می‌کنیم
         if request.user.is_authenticated:
             conversation, created = Conversation.objects.get_or_create(user=request.user)
-            Message.objects.create(
-                conversation=conversation,
-                text=user_message_text,
-                is_from_user=True
-            )
-        
+            Message.objects.create(conversation=conversation, text=user_message_text, is_from_user=True)
         return StreamingHttpResponse(stream_response_generator(user_message_text))
+    
