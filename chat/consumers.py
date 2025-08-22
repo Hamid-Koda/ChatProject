@@ -69,3 +69,5 @@ class StreamChatConsumer(WebsocketConsumer):
 #connect to web socket in postman
 
 #connect to swagger : http://127.0.0.1:8000/api/schema/swagger-ui/
+
+#connect to daphne server : daphne -p 8000 core.asgi:application
