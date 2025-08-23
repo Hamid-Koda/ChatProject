@@ -68,6 +68,7 @@ def chat_page(request):
     },
     responses={200: {'description': 'پاسخ موفقیت‌آمیز ربات'}}
 )
+
 class ChatAPIView(APIView):
     """API for handling a standard, non-streaming chat request."""
     # permission_classes = [IsAuthenticated] # برای تست غیرفعال است
@@ -105,7 +106,6 @@ class ChatStreamAPIView(APIView):
     # permission_classes = [IsAuthenticated] # برای تست غیرفعال است
 
     def post(self, request, *args, **kwargs):
-        # ... (کد داخل این متد بدون تغییر باقی می‌ماند) ...
         user_message_text = request.data.get('message')
         if not user_message_text:
             return Response({'error': 'Message not provided'}, status=400)

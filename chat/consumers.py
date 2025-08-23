@@ -31,7 +31,6 @@ class ChatConsumer(WebsocketConsumer):
             Message.objects.create(conversation=conversation, text=user_message_text, is_from_user=True)
             Message.objects.create(conversation=conversation, text=bot_response_text, is_from_user=False)
         
-        # پاسخ را برای همه ارسال می‌کنیم
         self.send(text_data=json.dumps({
             'reply': bot_response_text
         }, ensure_ascii=False))
@@ -66,7 +65,8 @@ class StreamChatConsumer(WebsocketConsumer):
             self.send(text_data=json.dumps({'chunk': word + '\u00A0'}, ensure_ascii=False))
             time.sleep(0.1)
 
-#connect to web socket in postman
+
+#connect to web socket in postman : ws://127.0.0.1:8000/ws/chat/stream/
 
 #connect to swagger : http://127.0.0.1:8000/api/schema/swagger-ui/
 
